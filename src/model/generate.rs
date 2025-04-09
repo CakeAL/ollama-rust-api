@@ -1,10 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+use super::parameter::Parameter;
+
+#[derive(Debug, Serialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub struct GenerateRequestParameters {
     pub model: String,
     pub prompt: Option<String>,
+    pub options: Option<Parameter>,
 }
 
 #[derive(Debug, Deserialize)]

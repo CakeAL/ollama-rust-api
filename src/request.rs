@@ -75,6 +75,7 @@ mod tests {
         let para = GenerateRequestParameters {
             model: "qwen2.5:3b".to_string(),
             prompt: Some("你好。".to_string()),
+            ..Default::default()
         };
         let mut stream = generate(&ollama, &para).await.unwrap();
         while let Some(Ok(res)) = stream.next().await {
@@ -96,6 +97,7 @@ mod tests {
                 content: "你好。".to_string(),
                 images: None,
             }],
+            ..Default::default()
         };
         let mut stream = chat(&ollama, &para).await.unwrap();
         while let Some(Ok(res)) = stream.next().await {

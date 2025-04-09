@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use super::parameter::Parameter;
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MessageRole {
@@ -17,11 +19,12 @@ pub struct Message {
     pub images: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub struct ChatRequestParameters {
     pub model: String,
     pub messages: Vec<Message>,
+    pub options: Option<Parameter>,
 }
 
 #[derive(Debug, Deserialize)]
