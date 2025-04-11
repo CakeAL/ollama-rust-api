@@ -1,6 +1,6 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Parameter {
     mirostat: Option<i32>,
     mirostat_eta: Option<f32>,
