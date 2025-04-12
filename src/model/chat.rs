@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::parameter::Parameter;
@@ -31,7 +32,7 @@ pub struct ChatRequestParameters {
 #[serde(rename_all = "snake_case")]
 pub struct ChatResponse {
     pub model: String,
-    pub created_at: String,
+    pub created_at: DateTime<Utc>,
     pub message: Message,
     pub done: bool,
 

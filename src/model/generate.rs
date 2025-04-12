@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::parameter::Parameter;
@@ -14,7 +15,7 @@ pub struct GenerateRequestParameters {
 #[serde(rename_all = "snake_case")]
 pub struct GenerateResponse {
     pub model: String,
-    pub created_at: String,
+    pub created_at: DateTime<Utc>,
     pub response: String,
     pub done: bool,
 
