@@ -4,6 +4,7 @@ pub(crate) mod request;
 use model::{
     chat::ChatResponse,
     generate::{GenerateRequestParameters, GenerateResponse},
+    models::ModelList,
 };
 use request::OllamaResponseStream;
 use reqwest::{Client, Url};
@@ -14,10 +15,9 @@ pub struct Ollama {
 }
 
 impl Ollama {
-    #[must_use]
     pub fn new(host: Url) -> Result<Self, reqwest::Error> {
         Ok(Self {
-            host: host,
+            host,
             client: Client::new(),
         })
     }
@@ -39,14 +39,18 @@ impl Ollama {
         &self,
         para: &GenerateRequestParameters,
     ) -> Result<OllamaResponseStream<GenerateResponse>, reqwest::Error> {
-        request::generate(&self, para).await
+        request::generate(self, para).await
     }
 
     pub async fn chat(
         &self,
         para: &model::chat::ChatRequestParameters,
     ) -> Result<OllamaResponseStream<ChatResponse>, reqwest::Error> {
-        request::chat(&self, para).await
+        request::chat(self, para).await
+    }
+
+    pub async fn tags(&self) -> Result<ModelList, reqwest::Error> {
+        request::tags(self).await
     }
 }
 

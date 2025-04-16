@@ -8,6 +8,7 @@ use crate::{
     model::{
         chat::{ChatRequestParameters, ChatResponse},
         generate::{GenerateRequestParameters, GenerateResponse},
+        models::ModelList,
     },
 };
 
@@ -55,6 +56,14 @@ pub(crate) async fn chat(
     let url = format!("{}api/chat", ollama.host());
     let body = serde_json::json!(para);
     send_request(&ollama.client, &url, &body.to_string()).await
+}
+
+pub(crate) async fn tags(ollama: &Ollama) -> Result<ModelList, reqwest::Error> {
+    let url = format!("{}api/tags", ollama.host());
+    let resp = ollama.client.get(&url).send().await?;
+    let body = resp.bytes().await?;
+    let model_list = serde_json::from_slice(&body).unwrap_or(ModelList { models: Vec::new() });
+    Ok(model_list)
 }
 
 #[cfg(test)]
@@ -107,5 +116,12 @@ mod tests {
                 dbg!(res);
             }
         }
+    }
+
+    #[tokio::test]
+    async fn test_tags() {
+        let ollama = Ollama::default();
+        let model_list = tags(&ollama).await.unwrap();
+        dbg!(model_list);
     }
 }
