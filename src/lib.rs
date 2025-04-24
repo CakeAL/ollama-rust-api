@@ -2,7 +2,8 @@ pub mod model;
 pub(crate) mod request;
 
 use model::{
-    chat::ChatResponse,
+    chat::{ChatRequestParameters, ChatResponse},
+    embedding::EmbedResponse,
     generate::{GenerateRequestParameters, GenerateResponse},
     models::ModelList,
 };
@@ -44,13 +45,20 @@ impl Ollama {
 
     pub async fn chat(
         &self,
-        para: &model::chat::ChatRequestParameters,
+        para: &ChatRequestParameters,
     ) -> Result<OllamaResponseStream<ChatResponse>, reqwest::Error> {
         request::chat(self, para).await
     }
 
     pub async fn tags(&self) -> Result<ModelList, reqwest::Error> {
         request::tags(self).await
+    }
+
+    pub async fn embedding(
+        &self,
+        para: &model::embedding::EmbedRequestParameters,
+    ) -> Result<EmbedResponse, reqwest::Error> {
+        request::embed(self, para).await
     }
 }
 

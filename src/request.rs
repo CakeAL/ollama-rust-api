@@ -7,6 +7,7 @@ use crate::{
     Ollama,
     model::{
         chat::{ChatRequestParameters, ChatResponse},
+        embedding::{EmbedRequestParameters, EmbedResponse},
         generate::{GenerateRequestParameters, GenerateResponse},
         models::ModelList,
     },
@@ -66,6 +67,21 @@ pub(crate) async fn tags(ollama: &Ollama) -> Result<ModelList, reqwest::Error> {
     Ok(model_list)
 }
 
+pub(crate) async fn embed(
+    ollama: &Ollama,
+    para: &EmbedRequestParameters,
+) -> Result<EmbedResponse, reqwest::Error> {
+    let url = format!("{}api/embed", ollama.host());
+    let body = serde_json::json!(para);
+    let resp = ollama
+        .client
+        .post(&url)
+        .body(body.to_string())
+        .send()
+        .await?;
+    Ok(serde_json::from_slice(&resp.bytes().await?).unwrap_or_default())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,5 +139,19 @@ mod tests {
         let ollama = Ollama::default();
         let model_list = tags(&ollama).await.unwrap();
         dbg!(model_list);
+    }
+
+    #[tokio::test]
+    async fn test_embed() {
+        let ollama = Ollama::default();
+        let para = EmbedRequestParameters {
+            model: "nomic-embed-text:137m-v1.5-fp16".into(),
+            input: vec![
+                "Why is the sky blue?".to_string(),
+                "Why is the grass green?".to_string(),
+            ],
+        };
+        let embedding = embed(&ollama, &para).await.unwrap();
+        dbg!(embedding);
     }
 }
