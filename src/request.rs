@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-pub(crate) type OllamaResponseStream<T> = Pin<Box<dyn Stream<Item = Result<T, ()>> + Send>>;
+pub(crate) type OllamaResponseStream<T> = Pin<Box<dyn Stream<Item = Vec<T>> + Send>>;
 
 async fn send_request<T: DeserializeOwned>(
     client: &reqwest::Client,
@@ -23,18 +23,15 @@ async fn send_request<T: DeserializeOwned>(
     let resp = client.post(url).body(body.to_string()).send().await?;
     let stream = Box::new(resp.bytes_stream().map(|res| match res {
         Ok(bytes) => {
-            let res = serde_json::from_slice::<T>(&bytes);
-            match res {
-                Ok(res) => Ok(res),
-                Err(e) => {
-                    eprintln!("Failed to deserialize response: {}", e);
-                    Err(())
-                }
-            }
+            let jsons = String::from_utf8_lossy(&bytes);
+            jsons
+                .lines()
+                .map(|s| serde_json::from_str::<T>(s).unwrap())
+                .collect::<Vec<T>>()
         }
         Err(e) => {
             eprintln!("Failed to read response: {}", e);
-            Err(())
+            Vec::new()
         }
     }));
 
@@ -62,6 +59,7 @@ pub(crate) async fn chat(
 pub(crate) async fn tags(ollama: &Ollama) -> Result<ModelList, reqwest::Error> {
     let url = format!("{}api/tags", ollama.host());
     let resp = ollama.client.get(&url).send().await?;
+    dbg!(resp.status());
     let body = resp.bytes().await?;
     let model_list = serde_json::from_slice(&body).unwrap_or(ModelList { models: Vec::new() });
     Ok(model_list)
@@ -103,11 +101,13 @@ mod tests {
             ..Default::default()
         };
         let mut stream = generate(&ollama, &para).await.unwrap();
-        while let Some(Ok(res)) = stream.next().await {
-            print!("{}", res.response);
-            if res.done {
-                println!("");
-                dbg!(res);
+        while let Some(ress) = stream.next().await {
+            for res in ress {
+                print!("{}", res.response);
+                if res.done {
+                    println!("");
+                    dbg!(res);
+                }
             }
         }
     }
@@ -116,20 +116,28 @@ mod tests {
     async fn test_chat() {
         let ollama = Ollama::default();
         let para = ChatRequestParameters {
-            model: "qwen2.5:3b".to_string(),
+            model: "deepseek-r1:8b".to_string(),
             messages: vec![Message {
                 role: MessageRole::User,
-                content: "你好。".to_string(),
+                content: "你知道Markdown都有什么语法么，再讲一下Rust".to_string(),
                 images: None,
             }],
             ..Default::default()
         };
         let mut stream = chat(&ollama, &para).await.unwrap();
-        while let Some(Ok(res)) = stream.next().await {
-            print!("{}", res.message.content);
-            if res.done {
-                println!("");
-                dbg!(res);
+        while let Some(ress) = stream.next().await {
+            if ress.len() >= 2 {
+                println!(
+                    "\n*******************************************************\n此处同时返回了{}个结果。\n*******************************************************",
+                    ress.len()
+                );
+            }
+            for res in ress {
+                print!("{}", res.message.content);
+                if res.done {
+                    println!("");
+                    dbg!(res);
+                }
             }
         }
     }
