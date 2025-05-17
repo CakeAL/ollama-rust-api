@@ -16,11 +16,16 @@ pub struct Ollama {
 }
 
 impl Ollama {
-    pub fn new(host: Url) -> Result<Self, reqwest::Error> {
+    pub fn new(host: &str) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
-            host,
+            host: Url::parse(host)?,
             client: Client::new(),
         })
+    }
+
+    pub fn change_host(&mut self, host: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self.host = Url::parse(host)?;
+        Ok(())
     }
 
     pub fn host(&self) -> &str {
